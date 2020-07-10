@@ -14,30 +14,37 @@ type ClientInterface interface {
 	ExchangeRate(ctx context.Context, request Request) (*Response, error)
 }
 
-func NewClient() *client {
-	return &client{}
+func NewClient(host string, port string) *client {
+	return &client{ClientHost: host, ClientPort: port}
 }
 
-type client struct{}
+type client struct {
+	ClientHost string
+	ClientPort string
+}
 
-func (client *client) ExchangeRate(ctx context.Context, request Request) (*Response, error) {
+func (c *client) ExchangeRate(ctx context.Context, request Request) (*Response, error) {
+	contextLogger := log.WithContext(ctx)
 	response := &Response{}
-	cc, err := grpc.Dial("localhost"+":8000", grpc.WithInsecure())
+
+	connection, err := grpc.Dial(c.ClientHost+":"+c.ClientPort, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("could not connect: %v", err)
+		log.Fatalf("gRPC target error: could not connect: %v", err)
 	}
-	defer cc.Close()
-	c := gen.NewCurrencyExchangeServiceClient(cc)
+	defer connection.Close()
+
+	rpcClient := gen.NewCurrencyExchangeServiceClient(connection)
 
 	req := &gen.Request{
 		FromCurrency: request.FromCurrency,
 		ToCurrency:   request.ToCurrency,
 	}
-	res, err := c.GetExchangeRate(context.Background(), req)
+	res, err := rpcClient.GetExchangeRate(context.Background(), req)
 	if err != nil {
-		log.Fatalf("error while calling gRPC: %v", err)
+		contextLogger.WithError(err).Errorf("Error calling the currency exchange RPC")
+		return nil, err
 	}
-	log.Printf("Response from Service: %v", res.ConversionMultiple)
+	contextLogger.Infof("Response from currency-exchange-service: %v", res.ConversionMultiple)
 	response.FromCurrency = request.FromCurrency
 	response.ToCurrency = request.ToCurrency
 	response.ConversionMultiple = fmt.Sprintf("%f", res.ConversionMultiple)

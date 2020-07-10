@@ -34,7 +34,7 @@ func (cfg *ApplicationConfig) CurrencyExchangeClient() currencyexchange.ClientIn
 //NewApplicationConfig loads config values from environment and initialises config
 func NewApplicationConfig() *ApplicationConfig {
 	envValues := newEnvironmentConfig()
-	ceClient := currencyexchange.NewClient()
+	ceClient := currencyexchange.NewClient(envValues.ClientHost, envValues.ClientPort)
 
 	return &ApplicationConfig{
 		envValues:              envValues,

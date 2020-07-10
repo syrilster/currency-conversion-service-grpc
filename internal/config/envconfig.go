@@ -6,11 +6,13 @@ import (
 )
 
 type envConfig struct {
-	LogLevel string `env:"LOG_LEVEL"`
-
+	LogLevel   string `env:"LOG_LEVEL"`
 	ServerPort int    `env:"SERVER_PORT" envDefault:"8080"`
 	Version    string `env:"VERSION" envDefault:"v1"`
 	BaseUrl    string `env:"BASE_URL"`
+
+	ClientHost string `env:"CLIENT_HOST" envDefault:"localhost"`
+	ClientPort string `env:"CLIENT_PORT" envDefault:"8000"`
 
 	CurrencyExchangeEndpoint string `env:"CURRENCY_EXCHANGE_ENDPOINT" envDefault:"http://currency-exchange-service.default.svc.cluster.local:8000"`
 }
